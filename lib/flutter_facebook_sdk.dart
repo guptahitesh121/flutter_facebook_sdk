@@ -37,4 +37,11 @@ class FlutterFacebookSdk {
     final fbUserMap = await _channel.invokeMethod('login');
     return FacebookUser.fromMap(fbUserMap);
   }
+
+  static Future<void> share(String url, String text) async {
+    await _channel.invokeMethod('share', {
+      'url': url,
+      'quote': text,
+    });
+  }
 }

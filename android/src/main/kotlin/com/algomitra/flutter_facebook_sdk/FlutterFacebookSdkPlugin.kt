@@ -2,11 +2,15 @@ package com.algomitra.flutter_facebook_sdk
 
 import android.app.Activity
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.annotation.NonNull
 import com.facebook.*
 import com.facebook.login.LoginManager
 import com.facebook.login.LoginResult
+import com.facebook.share.Sharer
+import com.facebook.share.model.ShareLinkContent
+import com.facebook.share.widget.ShareDialog
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
@@ -42,6 +46,10 @@ class FlutterFacebookSdkPlugin : FlutterPlugin, MethodCallHandler, PluginRegistr
     override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
         if (call.method == "login") {
             login(result)
+        } else if (call.method == "share") {
+            val url = call.argument<String>("url")!!
+            val quote = call.argument<String>("quote")!!
+            facebookShareLink(result, url, quote)
         } else {
             result.notImplemented()
         }
@@ -82,6 +90,26 @@ class FlutterFacebookSdkPlugin : FlutterPlugin, MethodCallHandler, PluginRegistr
         parameters.putString("fields", "email, first_name, last_name")
         request.parameters = parameters
         request.executeAsync()
+    }
+
+    private fun facebookShareLink(channel: Result, url: String, quote: String) {
+        val uri: Uri = Uri.parse(url)
+        val content = ShareLinkContent.Builder().setContentUrl(uri).setQuote(quote).build()
+        val shareDialog = ShareDialog(activity)
+        shareDialog.registerCallback(callbackManager, object : FacebookCallback<Sharer.Result?> {
+            override fun onSuccess(result: Sharer.Result?) {
+                channel.success("done")
+            }
+
+            override fun onCancel() {}
+
+            override fun onError(error: FacebookException) {
+                channel.error("error", error.message, null)
+            }
+        })
+        if (ShareDialog.canShow(ShareLinkContent::class.java)) {
+            shareDialog.show(content)
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {

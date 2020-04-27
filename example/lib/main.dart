@@ -32,6 +32,12 @@ class _MyAppState extends State<MyApp> {
                   print(fbUser.toMap());
                 },
               ),
+              RaisedButton(
+                child: Text('Facebook Share'),
+                onPressed: () async {
+                  await FlutterFacebookSdk.share('https://www.google.co.in/', 'This is Google');
+                },
+              ),
             ],
           ),
         ),
